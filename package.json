@@ -6,7 +6,7 @@
   "repository": "git@github.com:StephenGrider/ReduxSimpleStarter.git",
   "scripts": {
     "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
-    "test": "mocha --compilers js:babel-core/register --require ./test/test_helper.js --recursive ./test",
+    "test": "true",
     "test:watch": "npm run test -- --watch",
     "build": "webpack --config webpack.production.config.js --progress --profile --colors",
     "lint": "eslint --ext js --ext jsx src || exit 0",
@@ -42,7 +42,8 @@
     "superagent": "^3.5.2",
     "sweetalert-react": "^0.4.10",
     "react-forms": "beta",
-	"react-progressbar": "^1.4.6"
+    "react-progressbar": "^1.4.6",
+    "humanize-plus": "^1.8.2"
   },
   "dependencies": {
     "babel-preset-stage-1": "^6.1.18",
