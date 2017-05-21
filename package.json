@@ -42,7 +42,8 @@
     "superagent": "^3.5.2",
     "sweetalert-react": "^0.4.10",
     "react-forms": "beta",
-	"react-progressbar": "^1.4.6"
+    "react-progressbar": "^1.4.6",
+    "humanize-plus": "^1.8.2"
   },
   "dependencies": {
     "babel-preset-stage-1": "^6.1.18",
