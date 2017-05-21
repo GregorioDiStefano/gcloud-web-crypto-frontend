@@ -4,5 +4,5 @@ node_js:
 
 before_script:
   - npm update
-  - npm install -g gulp
-  - npm install
+  - npm install -g gulp webpack
+  - webpack
