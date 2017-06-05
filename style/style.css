@@ -43,7 +43,7 @@ a {
 }
 
 #mainMenu {
-	width: 400px;
+	width: 300px;
   border-bottom: 1px solid;
 	display: flex;
 	justify-content: space-between;
@@ -52,6 +52,7 @@ a {
 }
 
 #userMenu {
+	width: 200px;
 	display: flex;
 	justify-content: space-between;
 	margin: 10px 0px 20px 0px;
@@ -158,4 +159,21 @@ div.ReactTags__suggestions li mark {
 div.ReactTags__suggestions ul li.active {
     background: #b7cfe0;
     cursor: pointer;
+}
+
+#virtfolder {
+	width: 100%;
+}
+
+#virtfolder + div {
+	z-index: 99;
+}
+
+#captcha {
+    width: 388px;
+    margin: 0 auto;
+}
+
+#searchTag > div {
+		display: inline-block;
 }
