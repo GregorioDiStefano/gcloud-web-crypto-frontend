@@ -6,7 +6,7 @@ import request from 'superagent'
 import Login from './components/login'
 import Signup from './components/signup'
 import User from './components/user'
-import { Router, Route, Redirect, Link, browserHistory } from 'react-router'
+import { Router, Route, browserHistory } from 'react-router'
 
 class App extends Component {
   constructor(props) {
@@ -16,8 +16,16 @@ class App extends Component {
     userIsAuthenticated = (nextState, replace) => {
         var self = this
         if (!document.cookie.startsWith("jwt=")) {
-          replace({ pathname: `/login`, state: { nextPathname: nextState.location.pathname }})
+          browserHistory.push("/login")
         }
+
+        request
+          .post('/auth/account/verify')
+          .end(function(err, res){
+            if (err) {
+              browserHistory.push("/login")
+            }
+          })
     }
 
     logoutUser = (nextState, replace) => {

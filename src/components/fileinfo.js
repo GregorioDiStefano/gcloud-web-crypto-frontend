@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 import request from 'superagent'
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-
 
 class FileInfo extends Component {
   constructor(props) {
@@ -9,13 +7,13 @@ class FileInfo extends Component {
     this.setState({ filedata: this.props.fi})
 }
 
-removeFile = (e) => {
+removeFile = () => {
   var uuid = this.props.fileid
   request
     .del('/file/' + uuid)
     .end(function(err, res){
       console.log(err, res)
-    });
+    })
 }
 
 hideInfo = () => {
@@ -55,8 +53,8 @@ render() {
               <td>{this.props.fileSize}</td>
             </tr>
             <tr>
-              <th>MD5</th>
-              <td>{this.props.fileMD5Hash}</td>
+              <th>SHA2</th>
+              <td>{this.props.fileHash}</td>
             </tr>
             <tr>
               <th>Uploaded</th>

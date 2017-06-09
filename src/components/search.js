@@ -27,38 +27,35 @@ class Search extends Component {
       tags.splice(i, 1);
       this.setState({tags: tags});
       this.hideInputWhenTagsEmpty()
+      this.handleTagChange(tags)
   }
 
   handleAddition = (tag) => {
       let tags = this.state.tags;
+
+      // don't add duplicate tags
+      for (const existingTag of tags) {
+        if (tag == existingTag.text) {
+          return
+        }
+      }
+
       tags.push({
-          id: tags.length + 1,
           text: tag
       });
+
       this.setState({tags: tags});
-  }
-
-  handleDrag = (tag, currPos, newPos) => {
-      let tags = this.state.tags;
-
-      // mutate array
-      tags.splice(currPos, 1);
-      tags.splice(newPos, 0, tag);
-
-      // re-render
-      this.setState({ tags: tags });
+      this.handleTagChange(tags)
   }
 
   handleTagChange = (tags) =>  {
-    this.props.tagsCallback(tags)
+    this.props.handle(tags)
   }
 
   render() {
     if (this.state.showInputField) {
       let tags = this.state.tags;
       let suggestions = ["Banana", "Mango", "Pear", "Apricot"]
-
-      this.handleTagChange(tags)
 
       return (
         <div onBlur={this.onBlur}>
@@ -67,7 +64,6 @@ class Search extends Component {
                    suggestions={suggestions}
                    handleDelete={this.handleDelete}
                    handleAddition={this.handleAddition}
-                   handleDrag={this.handleDrag}
         />
         </div>
       );

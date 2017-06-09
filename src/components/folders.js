@@ -17,10 +17,15 @@ class Folder extends Component {
       showDeleteFolder: false,
       showFileInfo: false,
     }
-    //this.hideFileInfoHandler = this.hideFileInfoHandler.bind(this)
 
     this.currentFolder = "/"
     this.updateFolder("/")
+}
+
+tags = [];
+
+componentWillMount = () => {
+  this.updateFolder("/")
 }
 
 hideFileInfoHandler = () => {
@@ -30,12 +35,28 @@ hideFileInfoHandler = () => {
 updateFolder = (path) => {
   this.setState({ showFileInfo: false})
   var self = this
-  request
-    .get('/auth/list/fs/?path=' + path)
-    .end(function(err, res){
-      if(err) throw err;
-      self.setState({ fs: JSON.parse(res.text) });
-    });
+
+  if (self.tags.length > 0) {
+
+    let tagQuery = ""
+    for (const tag of self.tags) {
+      tagQuery += "&tags=" + tag
+    }
+
+    request
+      .get('/auth/list/fs/?path=' + path + tagQuery)
+      .end(function(err, res){
+        if(err) throw err;
+        self.setState({ fs: JSON.parse(res.text) });
+      });
+  } else  {
+    request
+      .get('/auth/list/fs/?path=' + path)
+      .end(function(err, res){
+        if(err) throw err;
+        self.setState({ fs: JSON.parse(res.text) });
+      });
+  }
 }
 
 navigate = (row) => {
@@ -43,7 +64,6 @@ navigate = (row) => {
     this.currentFolder = row.fullpath
     this.updateFolder(this.currentFolder)
   }
-
 }
 
 promptRemoveDialog = (e, deleteType, deleteInfo) => {
@@ -116,7 +136,7 @@ displayInformation = (e, row) => {
                   fileDescription: row["description"],
                   fileName: row["name"],
                   fileSize: row["filesize"],
-                  fileMD5Hash: row["md5"],
+                  fileHash: row["sha2"],
                   fileTags: row["tags"],
                   fileUploadDate: row["upload_date"]})
   this.setState({ showFileInfo: true })
@@ -150,21 +170,22 @@ normalizeDate = (cell, row) => {
   }
 }
 
+handleTagChange = (e) => {
+  let allTags = []
+  for (const tag of e) {
+    allTags.push(tag.text)
+  }
+
+  this.tags = allTags
+  this.updateFolder(this.currentFolder)
+}
+
 render() {
-    var sourcedata
-
-    if (this.state && typeof this.state.fs !== 'undefined') {
-      sourcedata = this.state.fs
-      console.log(sourcedata)
-    } else {
-      console.log(sourcedata)
-    }
-
     var folders = [];
 
-    for (var key in sourcedata) {
-      if (sourcedata.hasOwnProperty(key)) {
-        var obj = sourcedata[key]
+    for (var key in this.state.fs) {
+      if (this.state.fs.hasOwnProperty(key)) {
+        var obj = this.state.fs[key]
         folders.push(obj)
       }
     }
@@ -202,14 +223,16 @@ render() {
       return returnLink
     }
 
-    console.log(currentFolderLinks())
-
     return (
       <div>
         <Header />
 
         <h2 id="locationBar">{currentFolderLinks()}</h2>
-        <Search />
+
+        <div id="searchTag">
+          <span> Search by tags: </span>
+          <Search style={{display: "inline"}} handle={this.handleTagChange}/>
+        </div>
 
         { this.state.showFileInfo ?
             <FileInfo hideFileInfoHandler = {this.hideFileInfoHandler}
@@ -217,7 +240,7 @@ render() {
                     fileTitle={this.state.fileTitle}
                     fileDescription={this.state.fileDescription}
                     fileType={this.state.fileType}
-                    fileMD5Hash={this.state.fileMD5Hash}
+                    fileHash={this.state.fileHash}
                     fileSize={this.state.fileSize}
                     fileTags={this.state.fileTags}
                     fileUploadDate={this.state.fileUploadDate}>

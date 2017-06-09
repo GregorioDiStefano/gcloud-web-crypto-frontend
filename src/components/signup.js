@@ -1,20 +1,24 @@
 import React, { Component } from 'react'
 import request from 'superagent'
 import { browserHistory } from 'react-router'
+import Recaptcha from 'react-recaptcha'
+
+let recaptchaInstance;
 
 class Signup extends Component {
   constructor(props) {
     super(props)
 
-    this.state = {password1: "", password2: "", disabledSubmit: true, signupError: "", username: "admin", mustBeAdmin: false}
+    this.state = {password1: "", password2: "", captcha_response: "", disabledSubmit: true, signupError: "", username: "", mustBeAdmin: false}
   }
 
-  componentDidMount = () => {
+  componentWillMount = () => {
+    var self = this
     request
       .get('/account/initial')
       .end(function(error, response) {
          if (response.statusCode == 404) {
-           this.setState({ "mustBeAdmin": true })
+           self.setState({ "mustBeAdmin": true, "username": "admin" })
          }
       })
     }
@@ -26,18 +30,21 @@ class Signup extends Component {
 
   onSubmit = (e) => {
     e.preventDefault()
+
     var self = this;
     request
       .post('/account/signup')
       .set('Content-Type', 'application/json')
+      .set("google-captcha", this.state.captcha_response)
       .send({ "password": self.state.password1, "username": self.state.username })
       .end(function(error, response){
         if (response.statusCode != 201) {
           if ("status" in response.body) {
             self.setState({signupError: response.body["status"]})
           }
+          recaptchaInstance.reset()
         } else {
-            // hack: redirect to login after 800ms since operation takes some time
+            // hack: redirect to login after 800ms since account creation takes some time
             setTimeout(function(){
                browserHistory.push(`/login`)
             }, 800);
@@ -45,11 +52,22 @@ class Signup extends Component {
         })
       }
 
+  verifyCallback = (e) => {
+    this.setState({ captcha_response: e })
+  }
+
   verifyPassword = (e) => {
     self = this
     this.setState({[e.target.id]:  e.target.value}, function(){
       if (this.state.password1 == this.state.password2 && this.state.password1 != "") {
-        self.setState({disabledSubmit: false})
+        if (this.state.password1.match(/[@]|[#]|[$]|[%]|[!]|[?]|[\*]|[0-9]/) == null ) {
+          self.setState({signupError: "add a special character or number to your password"})
+          return
+        } else if (this.state.password1.length < 8) {
+          self.setState({signupError: "password must be at least 8 characters"})
+          return
+        }
+        self.setState({signupError: "", disabledSubmit: false})
       } else {
         self.setState({disabledSubmit: true})
       }
@@ -85,6 +103,11 @@ class Signup extends Component {
                <input id="password2" name="password" type="password" className="form-control input-md" onChange={this.verifyPassword} required />
              </div>
            </div>
+           <div className="form-group" id="captcha" >
+             <div className="col-md-4">
+               <Recaptcha ref={e => recaptchaInstance = e} verifyCallback={this.verifyCallback} sitekey="6LfuVyMUAAAAALe_5VDR6PFbCi9lTjE1pVWHMJpW"/>
+             </div>
+		       </div>
            <div className="form-group">
              <label className="col-md-4 control-label" htmlFor="singlebutton" />
              <div className="col-md-4">

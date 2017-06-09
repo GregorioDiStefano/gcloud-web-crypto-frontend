@@ -5,6 +5,7 @@ import superagent from 'superagent'
 import SweetAlert from 'sweetalert-react';
 import Header from './header.js';
 import Search from './search.js';
+import Autocomplete from 'react-autocomplete';
 
 class Upload extends React.Component {
 
@@ -13,7 +14,7 @@ class Upload extends React.Component {
     let formValue = createValue({
       value: props.value
     })
-    this.state = {formValue, uploadProgress: 0.0}
+    this.state = {formValue, value: "", loading: false, uploadProgress: 0.0, matchingFolder: []}
     this.tags = {}
   }
 
@@ -70,6 +71,19 @@ class Upload extends React.Component {
             </div>
           </div>
 
+
+		  <div className="form-group">
+		      <label className="col-md-4 control-label" htmlFor="storage_class">Storage class</label>
+		      <div className="col-md-4">
+			      <select id="selectbasic" name="storage_class" className="form-control">
+			          <option value="multi_regional">Multi-Regional Storage</option>
+			          <option value="regional">Regional Storage</option>
+			          <option value="nearline" selected>Nearline Storage</option>
+			          <option value="coldline">Coldline Storage</option>
+			      </select>
+		      </div>
+		  </div>
+
           <div className="form-group">
             <label className="col-md-4 control-label" htmlFor="filebutton">Files to upload</label>
             <div className="col-md-4">
@@ -86,17 +100,53 @@ class Upload extends React.Component {
 
           <div className="form-group">
             <label className="col-md-4 control-label" htmlFor="virtfolder">Folder</label>
-            <div className="col-md-5">
-            <input id="virtfolder" name="virtfolder" type="text" placeholder="Virtual folder" className="form-control input-md"/>
-            <span className="help-block"></span>
+            <div className="col-md-4">
+			  <Autocomplete
+				  inputProps={{ name: 'virtfolder', id: 'virtfolder', className:"form-control input-md", placeholder: "Folder", type:"text" }}
+				  ref="autocomplete"
+				  value={this.state.value}
+				  items={this.state.matchingFolder}
+				  wrapperProps={{ style:  { width: "120%" } }}
+				  getItemValue={(item) => item}
+				  onSelect={(value, item) => {
+					this.setState({ value, matchingFolder: [ item ] })
+				  }}
+				  onChange={(event, value) => {
+					this.setState({ value, loading: true })
+
+					var self = this
+					superagent.get('/auth/folder/search?path=' + value)
+							   .end(function(err, response) {
+							   if (err) {
+								   self.setState({ matchingFolder: [], loading: false })
+								   return
+							   }
+
+							   var arr = [];
+							   let json = JSON.parse(response.text)
+							   for(var x in json){
+								   arr.push(json[x]);
+							   }
+							   self.setState({ matchingFolder: arr, loading: false })
+							   })
+				  }}
+				  renderItem={(item) => (
+					<div
+					  key={item.abbr}
+					  id={item.abbr}
+					>{item}</div>
+				  )}
+			 />
             </div>
           </div>
           <div className="form-group">
             <label className="col-md-4 control-label" htmlFor="taginput">Tags</label>
             <div className="col-md-4">
-                <Search tagsCallback={this.tagsCallback}/>
+                <Search handle={this.tagsCallback}/>
             </div>
           </div>
+
+
           <div className="form-group">
             <label className="col-md-4 control-label" htmlFor="singlebutton"></label>
             <div className="col-md-4">

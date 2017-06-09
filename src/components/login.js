@@ -2,18 +2,21 @@ import React, { Component } from 'react'
 import request from 'superagent'
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { Router, Route, Redirect, Link, browserHistory } from 'react-router'
+import Recaptcha from 'react-recaptcha'
+
+let recaptchaInstance;
 
 class Login extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
+	    needCaptcha: false,
       wrongPassword: false,
       username: "",
       password: ""
     }
   }
-
 
   componentDidMount = () => {
     request
@@ -30,8 +33,11 @@ class Login extends Component {
   }
 
   handlePasswordChange = (event) => {
-    console.log(event.target.value)
     this.setState({ password: event.target.value});
+  }
+
+  verifyCallback = (e) => {
+    this.setState({ captcha_response: e })
   }
 
   onSubmit = (e) => {
@@ -40,19 +46,22 @@ class Login extends Component {
     request
       .post('/account/login')
       .set('Content-Type', 'application/json')
+      .set("google-captcha", this.state.captcha_response)
       .send({ "username": this.state.username, "password": this.state.password })
       .end(function(error, response){
         if(error) {
           if (response.statusCode == 401) {
             self.setState({"wrongPassword": true})
+          } else if (response.statusCode == 400) {
+            self.setState({"needCaptcha": true})
           }
+          recaptchaInstance.reset()
         } else {
           self.setState({"wrongPassword": false})
 
           var token = JSON.parse(response.text)["token"]
           document.cookie = "jwt=" + token;
 
-          console.log("setting item: ", self.state.username)
           localStorage.setItem("user", self.state.username)
 
           if (self.props.location.state != null) {
@@ -85,6 +94,13 @@ class Login extends Component {
              </div>
            </div>
 
+		   { this.state.needCaptcha &&
+           <div className="form-group" id="captcha" >
+             <div className="col-md-4">
+             <Recaptcha sitekey="6LfuVyMUAAAAALe_5VDR6PFbCi9lTjE1pVWHMJpW" ref={e => recaptchaInstance = e}  verifyCallback={this.verifyCallback}  />
+             </div>
+		   </div>
+		   }
            <div className="form-group">
              <label className="col-md-4 control-label" htmlFor="singlebutton" />
              <div className="col-md-4">
